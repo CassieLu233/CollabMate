@@ -15,7 +15,7 @@ console.log('process.cwd():', process.cwd());
 console.log('Resolved path:', path.join(__dirname, '..', 'data', 'users.json'));
 console.log('BACKEND_BASE_PATH:', process.env.BACKEND_BASE_PATH);
 const BACKEND_DIR = process.env.BACKEND_BASE_PATH || __dirname;
-const USERS_FILE_PATH = path.join(BACKEND_DIR, 'data', 'users.json');
+const USERS_FILE_PATH = path.join(BACKEND_DIR, '..', 'data', 'users.json');
 
 /**
  * Load all users from the JSON file.
