@@ -7,8 +7,8 @@
 
 const fs = require("fs");
 const path = require("path");
-
-const TASKS_FILE_PATH = path.join(__dirname, "../data/tasks.json");
+const BACKEND_DIR = process.env.BACKEND_BASE_PATH || __dirname;
+const TASKS_FILE_PATH = path.join(BACKEND_DIR, "../data/tasks.json");
 
 /**
  * Load all tasks from the JSON file.
