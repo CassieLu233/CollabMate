@@ -1,6 +1,9 @@
 # Project deployment and testing instructions
 
-## Deployment
+## Online Deployment
+https://collab-mate-two.vercel.app/
+
+## Local Deployment
 
 ### 1. Clone Project
 
