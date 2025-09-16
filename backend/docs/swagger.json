@@ -1,63 +1,9 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.0",
   "info": {
-    "title": "CollabMate API",
-    "version": "1.0.0",
-    "license": {
-      "name": "MIT",
-      "url": "https://opensource.org/licenses/MIT"
-    }
+    "title": "CollabMate API Docs",
+    "version": "1.2.0"
   },
-  "servers": [
-    {
-      "url": "http://localhost:5000"
-    }
-  ],
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
-      }
-    },
-    "schemas": {
-      "Task": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "todo",
-              "in_progress",
-              "done"
-            ]
-          },
-          "userIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "teamId": {
-            "type": "string",
-            "nullable": true
-          }
-        }
-      }
-    }
-  },
-  "security": [
-    {
-      "bearerAuth": []
-    }
-  ],
   "paths": {
     "/auth/register": {
       "post": {
@@ -150,12 +96,70 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "userId",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Filter tasks assigned to this user or created by this user"
+          },
+          {
+            "in": "query",
+            "name": "teamId",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Filter tasks belonging to this team"
+          },
+          {
+            "in": "query",
+            "name": "union",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "required": false,
+            "description": "Whether to union the filters"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "List of task deadlines"
+            "description": "List of task deadlines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "taskId": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "deadline": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "status": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized - missing or invalid token"
+          },
+          "404": {
+            "description": "Team not found"
           }
         }
       }
@@ -171,12 +175,63 @@
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "userId",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Filter tasks assigned to this user or created by this user"
+          },
+          {
+            "in": "query",
+            "name": "teamId",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Filter tasks belonging to this team"
+          },
+          {
+            "in": "query",
+            "name": "union",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "required": false,
+            "description": "Whether to union the filters"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Summary with total, completed, remaining"
+            "description": "Summary with total, completed, remaining",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "completed": {
+                      "type": "integer"
+                    },
+                    "remaining": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized - missing or invalid token"
+          },
+          "404": {
+            "description": "Team not found"
           }
         }
       }
@@ -669,7 +724,7 @@
       },
       "get": {
         "summary": "Get tasks",
-        "description": "Optionally filtered by status, teamId, userId",
+        "description": "Retrieve tasks with flexible filtering.   - By default, filters are applied in **intersection (AND)** mode.   - If `union=true`, filters are combined in **union (OR)** mode.   - If no filter parameters are provided, all tasks are returned.\n",
         "tags": [
           "Task"
         ],
@@ -679,26 +734,37 @@
             "name": "status",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Filter by task status"
           },
           {
             "in": "query",
             "name": "teamId",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Filter by teamId (based on team membership)"
           },
           {
             "in": "query",
             "name": "userId",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Filter by assigned userId"
+          },
+          {
+            "in": "query",
+            "name": "union",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "If true, results are combined using OR (union)   instead of the default AND (intersection).\n"
           }
         ],
         "responses": {
           "200": {
-            "description": "Filtered task list"
+            "description": "Task list (filtered or all)"
           }
         }
       }
@@ -1563,5 +1629,6 @@
       }
     }
   },
+  "components": {},
   "tags": []
 }
