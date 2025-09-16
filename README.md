@@ -1,7 +1,16 @@
 # Project deployment and testing instructions
 
 ## Online Deployment
+
+### 1. Overseas users
+
 https://collab-mate-two.vercel.app/
+
+### 2. Domestic users
+
+>Since the first address is easy to fail to load in China, please click the following address to access the project
+
+http://45.77.242.54
 
 ## Local Deployment
 
@@ -10,14 +19,14 @@ https://collab-mate-two.vercel.app/
 Execute in any directory:
 
 ```bash
-git clone https://github.com/unsw-cse-comp99-3900/capstone-project-25t2-9900-t11a-almond.git
-cd capstone-project-25t2-9900-t11a-almond
+git clone https://github.com/CassieLu233/CollabMate.git
+cd CollabMate
 ```
 
 ### 2. Catalog structure (simplified)
 
 ```text
-capstone-project-25t2-9900-t11a-almond/
+CollabMate/
 ├─ docker-compose.yml         # Docker container
 ├─ README.md
 ├─ TESTING_BACKEND.md         # Backend testing guide
@@ -95,7 +104,9 @@ If you are pulling code from GitHub, please follow these steps to get it:
    - **Application ID** → fill in `GITLAB_CLIENT_ID`
    - **Secret** → fill in `GITLAB_CLIENT_SECRET`
 
-### 5. Start the Docker environment
+### 5. Start the Development environment
+
+#### Case 1: Docker service can be used
 
 Make sure Docker Desktop is installed and launched locally, then execute the following command at the project root:
 
@@ -112,6 +123,32 @@ When the command line outputs the following information, it means that the start
 
 - Frontend entry：[http://localhost](http://localhost)
 - Backend Swagger file：[http://localhost:5000](http://localhost:5000)
+
+#### Case 2: Docker service can not be used
+
+##### step1: Enter backend directory
+
+Execute the following command
+
+```bash
+# Install backend dependencies
+npm install
+
+# Start backend service
+npm start
+```
+
+##### step2: Enter frontend directory
+
+Execute the following command
+
+```bash
+# Install frontend dependencies
+npm install
+
+# Start backend service
+npm run dev
+```
 
 ### 6. Swagger documentation offline access
 
