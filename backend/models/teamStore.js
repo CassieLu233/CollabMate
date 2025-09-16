@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 
 const BACKEND_DIR = process.env.BACKEND_BASE_PATH || path.join(__dirname, '..');
-const TEAMS_FILE_PATH = path.join(BACKEND_DIR, 'data', 'tasks.json');
+const TEAMS_FILE_PATH = path.join(BACKEND_DIR, 'data', 'teams.json');
 
 /**
  * Load all teams from the JSON file.

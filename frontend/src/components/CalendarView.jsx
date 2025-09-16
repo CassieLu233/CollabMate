@@ -26,6 +26,15 @@ const CalendarView = ({ deadlines: propDeadlines }) => {
   const [deadlines, setDeadlines] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const decodeToken = (token) => {
+    try {
+      const base64 = token.split(".")[1];
+      const json = atob(base64.replace(/-/g, "+").replace(/_/g, "/"));
+      return JSON.parse(json);
+    } catch {
+      return {};
+    }
+  };
 
   // Update today's date every minute
   useEffect(() => {
@@ -45,23 +54,34 @@ const CalendarView = ({ deadlines: propDeadlines }) => {
     setError(null);
     try {
       const token = localStorage.getItem('token');
-      
-      const response = await fetch(`${API_BASE}/dashboard/calendar`, {
-        method: 'GET',
+      if (!token) throw new Error('No auth token');
+
+      const { userId } = decodeToken(token) || {};
+      const teamIdStored = localStorage.getItem("currentTeamId");
+      const teamId = teamIdStored && teamIdStored !== "null" ? teamIdStored : "";
+
+      const params = new URLSearchParams();
+      if (userId) params.set("userId", userId);
+      if (teamId) params.set("teamId", teamId);
+      params.set("union", "true");
+
+      const url = `${API_BASE}/dashboard/calendar?${params.toString()}`;
+
+      const resp = await fetch(url, {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
+      if (!resp.ok) {
+        if (resp.status === 401) {
           throw new Error('Unauthorized - please login again');
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${resp.status}`);
       }
 
-      const calendarData = await response.json();
+      const calendarData = await resp.json();
       
       setDeadlines(calendarData);
       console.log("Successfully fetched calendar data:", calendarData);

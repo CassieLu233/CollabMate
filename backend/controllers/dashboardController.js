@@ -6,6 +6,8 @@
  */
 
 const { loadTasks, findTaskById } = require("../models/taskStore");
+const {loadTeams} = require("../models/teamStore");
+const {filterTasks} = require("./taskController");
 
 /**
  * Get all task deadlines (used to populate calendar).
@@ -15,8 +17,19 @@ const { loadTasks, findTaskById } = require("../models/taskStore");
  */
 const getCalendarData = (req, res) => {
   const tasks = loadTasks();
-
-  const calendarData = tasks.map((task) => ({
+  const teams = loadTeams();
+  const { userId, teamId, union } = req.query;
+  
+  let filteredTasks;
+  try {
+    filteredTasks = filterTasks(tasks, teams, { teamId, userId, union });
+  } catch (err) {
+    if (err.message === "Team not found") {
+      return res.status(404).json({ error: "Team not found" });
+    }
+    throw err;
+  }
+  const calendarData = filteredTasks.map((task) => ({
     taskId: task.taskId,
     title: task.title,
     deadline: task.deadline,
@@ -34,9 +47,20 @@ const getCalendarData = (req, res) => {
  */
 const getTaskSummary = (req, res) => {
   const tasks = loadTasks();
-
-  const total = tasks.length;
-  const completed = tasks.filter((t) => t.status === "Done").length;
+  const teams = loadTeams();
+  const { userId, teamId, union } = req.query;
+  
+  let filteredTasks;
+  try {
+    filteredTasks = filterTasks(tasks, teams, { teamId, userId, union });
+  } catch (err) {
+    if (err.message === "Team not found") {
+      return res.status(404).json({ error: "Team not found" });
+    }
+    throw err;
+  }
+  const total = filteredTasks.length;
+  const completed = filteredTasks.filter((t) => t.status === "Done").length;
   const remaining = total - completed;
 
   res.json({

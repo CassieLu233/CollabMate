@@ -121,28 +121,65 @@ const changeStatus = (req, res) => {
 };
 
 /**
- * Get all tasks, optionally filtered by status, teamtId, or assignee.
- * @param {string} [status.query] - Filter by task status
- * @param {string} [teamId.query] - Filter by teamId（Based on member attribution）
- * @param {string} [userId.query] - Filter by assigned userId
+ * Filter tasks
+ * @param {Array} tasks - All tasks
+ * @param {Array} teams - All teams
+ * @param {Object} options - Filter options
+ * @param {string} [options.status] 
+ * @param {string} [options.teamId]
+ * @param {string} [options.userId]
+ * @param {boolean|string} [options.union=false] - Whether to use OR union instead of AND intersection
+ * @returns {Array} Filtered tasks
  */
-const getTasks = (req, res) => {
-  try {
-    const tasks = loadTasks();
-    const { status, teamId, userId } = req.query;
+const filterTasks = (tasks, teams, { status, teamId, userId, union = false }) => {
+  // No filters, return all
+  if (!status && !teamId && !userId) return tasks;
 
-    let filtered = tasks;
+  if (union === true || union === "true") {
+    const resultSet = new Set();
+
+    // By status
+    if (status) {
+      tasks
+        .filter((t) => t.status === status)
+        .forEach((t) => resultSet.add(t));
+    }
+
+    // By teamId
+    if (teamId) {
+      const team = teams.find((t) => t.teamId === teamId);
+      if (!team) throw new Error("Team not found");
+      const memberSet = new Set(team.members);
+      tasks
+        .filter(
+          (t) =>
+            Array.isArray(t.userIds) &&
+            t.userIds.some((uid) => memberSet.has(uid)) || t.creator && memberSet.has(t.creator)
+        )
+        .forEach((t) => resultSet.add(t));
+    }
+
+    // By userId
+    if (userId) {
+      tasks
+        .filter(
+          (t) => Array.isArray(t.userIds) && t.userIds.includes(userId) || t.creator === userId
+        )
+        .forEach((t) => resultSet.add(t));
+    }
+
+    return Array.from(resultSet);
+  } else {
+    // Default intersection (AND) mode
+    let filtered = [...tasks];
 
     if (status) {
       filtered = filtered.filter((t) => t.status === status);
     }
 
     if (teamId) {
-      const teams = loadTeams();
       const team = teams.find((t) => t.teamId === teamId);
-      if (!team) {
-        return res.status(404).json({ error: "Team not found" });
-      }
+      if (!team) throw new Error("Team not found");
       const memberSet = new Set(team.members);
       filtered = filtered.filter(
         (t) =>
@@ -157,11 +194,45 @@ const getTasks = (req, res) => {
       );
     }
 
-    return res.status(200).json({ message: "Tasks retrieved", tasks: filtered });
+    return filtered;
+  }
+}
+
+/**
+ * Get all tasks, optionally filtered by status, teamId, or userId.
+ * @param {string} [status.query] - Filter by task status
+ * @param {string} [teamId.query] - Filter by teamId（Based on member attribution）
+ * @param {string} [userId.query] - Filter by assigned userId
+ * @param {boolean} [union.query] - Whether to use OR union instead of default AND intersection
+ */
+const getTasks = (req, res) => {
+  try {
+    const tasks = loadTasks();
+    const teams = loadTeams();
+    const { status, teamId, userId, union } = req.query;
+
+    let filteredTasks;
+    try {
+      filteredTasks = filterTasks(tasks, teams, { status, teamId, userId, union });
+    } catch (err) {
+      if (err.message === "Team not found") {
+        return res.status(404).json({ error: "Team not found" });
+      }
+      throw err;
+    }
+
+    const mode = union === "true" || union === true ? "union" : "intersection";
+
+    return res.status(200).json({
+      message: `Tasks retrieved (${mode} mode)`,
+      tasks: filteredTasks,
+    });
   } catch (err) {
+    console.error("[getTasks] error:", err);
     return res.status(500).json({ error: "Failed to retrieve tasks" });
   }
 };
+
 
 /**
  * Get tasks grouped by status or by team.
@@ -274,4 +345,5 @@ module.exports = {
   getGroupedTasks,
   deleteTask,
   deleteAllTasks,
+  filterTasks
 };

@@ -13,7 +13,7 @@ const {
   getTaskProgress,
 } = require("../controllers/dashboardController");
 
-const { verifyToken } = require("../middleware/authMiddleware"); // ✅ 引入认证中间件
+const { verifyToken } = require("../middleware/authMiddleware");
 
 /**
  * @swagger
@@ -23,11 +23,49 @@ const { verifyToken } = require("../middleware/authMiddleware"); // ✅ 引入�
  *     tags: [Dashboard]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Filter tasks assigned to this user or created by this user
+ *       - in: query
+ *         name: teamId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Filter tasks belonging to this team
+ *       - in: query
+ *         name: union
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         required: false
+ *         description: Whether to union the filters
  *     responses:
  *       200:
  *         description: List of task deadlines
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   taskId:
+ *                     type: string
+ *                   title:
+ *                     type: string
+ *                   deadline:
+ *                     type: string
+ *                     format: date-time
+ *                   status:
+ *                     type: string
  *       401:
  *         description: Unauthorized - missing or invalid token
+ *       404:
+ *         description: Team not found
  */
 /**
  * @route GET /dashboard/calendar
@@ -44,11 +82,44 @@ router.get("/calendar", verifyToken, getCalendarData);
  *     tags: [Dashboard]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Filter tasks assigned to this user or created by this user
+ *       - in: query
+ *         name: teamId
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Filter tasks belonging to this team
+ *       - in: query
+ *         name: union
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         required: false
+ *         description: Whether to union the filters
  *     responses:
  *       200:
  *         description: Summary with total, completed, remaining
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: integer
+ *                 completed:
+ *                   type: integer
+ *                 remaining:
+ *                   type: integer
  *       401:
  *         description: Unauthorized - missing or invalid token
+ *       404:
+ *         description: Team not found
  */
 /**
  * @route GET /dashboard/summary

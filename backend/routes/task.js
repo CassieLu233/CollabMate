@@ -173,32 +173,52 @@ router.patch("/:taskId/status", verifyToken, changeStatus);
  * /task:
  *   get:
  *     summary: Get tasks
- *     description: Optionally filtered by status, teamId, userId
+ *     description: >
+ *       Retrieve tasks with flexible filtering.  
+ *       - By default, filters are applied in **intersection (AND)** mode.  
+ *       - If `union=true`, filters are combined in **union (OR)** mode.  
+ *       - If no filter parameters are provided, all tasks are returned.
  *     tags: [Task]
  *     parameters:
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
+ *         description: Filter by task status
  *       - in: query
  *         name: teamId
  *         schema:
  *           type: string
+ *         description: Filter by teamId (based on team membership)
  *       - in: query
  *         name: userId
  *         schema:
  *           type: string
+ *         description: Filter by assigned userId
+ *       - in: query
+ *         name: union
+ *         schema:
+ *           type: boolean
+ *         description: >
+ *           If true, results are combined using OR (union)  
+ *           instead of the default AND (intersection).
  *     responses:
  *       200:
- *         description: Filtered task list
+ *         description: Task list (filtered or all)
  */
+
 /**
- * Get all tasks, optionally filtered by status, teamId, or userId.
+ * Get all tasks with optional filters.
+ * - Default behavior applies filters in intersection (AND) mode.
+ * - If `union=true`, filters are applied in union (OR) mode.
+ * - If no filters are provided, all tasks are returned.
+ *
  * @route GET /task
  * @group Task - Query tasks
  * @param {string} [status.query] - Filter by task status
- * @param {string} [teamId.query] - Filter by teamId（基于成员归属推断）
+ * @param {string} [teamId.query] - Filter by teamId
  * @param {string} [userId.query] - Filter by assigned userId
+ * @param {boolean} [union.query] - Use union (OR) mode instead of intersection (AND)
  * @returns {Array<object>} 200 - Filtered task list
  */
 router.get("/", verifyToken, getTasks);

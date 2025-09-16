@@ -66,21 +66,34 @@ const Dashboard = () => {
   const fetchSummary = async () => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE}/dashboard/summary`, {
+      if (!token) throw new Error('No auth token');
+
+      const { userId } = decodeToken(token) || {};
+      const teamIdStored = localStorage.getItem("currentTeamId");
+      const teamId = teamIdStored && teamIdStored !== "null" ? teamIdStored : "";
+
+      const params = new URLSearchParams();
+      if (userId) params.set("userId", userId);
+      if (teamId) params.set("teamId", teamId);
+      params.set("union", "true");
+
+      const url = `${API_BASE}/dashboard/summary?${params.toString()}`;
+
+      const resp = await fetch(url, {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
-      
-      if (!response.ok) {
-        if (response.status === 401) {
+
+      if (!resp.ok) {
+        if (resp.status === 401) {
           throw new Error('Unauthorized - please login again');
         }
         throw new Error('Failed to fetch summary');
       }
-      
-      const data = await response.json();
+
+      const data = await resp.json();
       return {
         totalTasks: data.total,
         completedTasks: data.completed,
@@ -100,21 +113,35 @@ const Dashboard = () => {
   const fetchCalendar = async () => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE}/dashboard/calendar`, {
+      if (!token) throw new Error('No auth token');
+
+      const { userId } = decodeToken(token) || {};
+      const teamIdStored = localStorage.getItem("currentTeamId");
+      const teamId = teamIdStored && teamIdStored !== "null" ? teamIdStored : "";
+
+      const params = new URLSearchParams();
+      if (userId) params.set("userId", userId);
+      if (teamId) params.set("teamId", teamId);
+      params.set("union", "true");
+
+      const url = `${API_BASE}/dashboard/calendar?${params.toString()}`;
+
+      const resp = await fetch(url, {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
-      
-      if (!response.ok) {
-        if (response.status === 401) {
+
+      if (!resp.ok) {
+        if (resp.status === 401) {
           throw new Error('Unauthorized - please login again');
         }
         throw new Error('Failed to fetch calendar');
       }
-      
-      const data = await response.json();
+
+      const data = await resp.json();
+
       return data.map(task => ({
         id: task.taskId,
         title: task.title,
@@ -156,49 +183,51 @@ const Dashboard = () => {
     }
   };
 
-  // Get all tasks for real-time monitoring
+  // Get all tasks for real-time monitoring (by userId ∪ teamId)
   const fetchAllTasks = async () => {
     try {
       const token = getAuthToken();
-      const response = await fetch(`${API_BASE}/task`, {
+      if (!token) throw new Error('No auth token');
+
+      const { userId } = decodeToken(token) || {};
+      const teamIdStored = localStorage.getItem("currentTeamId");
+      const teamId = teamIdStored && teamIdStored !== "null" ? teamIdStored : "";
+
+      const params = new URLSearchParams();
+      if (userId) params.set("userId", userId);
+      if (teamId) params.set("teamId", teamId);
+      params.set("union", "true");
+
+      const url = `${API_BASE}/task?${params.toString()}`;
+
+      const resp = await fetch(url, {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
+
+      if (!resp.ok) {
+        throw new Error(`Failed to fetch tasks: ${resp.status}`);
       }
-      
-      const data = await response.json();
-      return data.tasks || [];
+
+      const json = await resp.json();
+      const tasks = json.tasks || [];
+
+      // Deduplication
+      const map = new Map();
+      tasks.forEach(t => {
+        const key = t.taskId ?? t.id ?? JSON.stringify(t);
+        map.set(key, t);
+      });
+
+      return Array.from(map.values());
     } catch (error) {
-      console.error('Error fetching all tasks:', error);
+      console.error("Error fetching all tasks:", error);
       return [];
     }
   };
 
-  // Check for updates by comparing data (removed auto-refresh functionality)
-  const checkForUpdates = useCallback(async () => {
-    try {
-      const tasks = await fetchAllTasks();
-      
-      // Create a simple hash to detect changes
-      const currentDataHash = JSON.stringify({
-        taskCount: tasks.length,
-        statusCounts: tasks.reduce((acc, task) => {
-          acc[task.status] = (acc[task.status] || 0) + 1;
-          return acc;
-        }, {}),
-        lastModified: Math.max(...tasks.map(t => new Date(t.updatedAt || t.createdAt).getTime()))
-      });
-      
-      lastUpdateRef.current = currentDataHash;
-    } catch (error) {
-      console.error('Error checking for updates:', error);
-    }
-  }, []);
 
   // Load dashboard data from API
   const fetchDashboardData = useCallback(async (showLoading = true) => {
