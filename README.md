@@ -4,13 +4,13 @@
 
 ### 1. Overseas users
 
-https://collab-mate-two.vercel.app/
+https://collab-mate-two.vercel.app
 
 ### 2. Domestic users
 
->Since the first address is easy to fail to load in China, please click the following address to access the project
+> Since the first address is easy to fail to load in China, please click the following address to access the project
 
-http://45.77.242.54
+http://collabmate.cassielu.com
 
 ## Local Deployment
 
@@ -45,7 +45,7 @@ CollabMate/
 │  └─ docs/
 │     ├─ swagger.html         # Swagger UI, can be opened on offline
 │     └─ swagger.json
-└─ frontend/ 
+└─ frontend/
    ├─ Dockerfile
    ├─ .env.example            # Examples of frontend environment variables
    ├─ public/                 # Static resource
@@ -90,7 +90,7 @@ If you are pulling code from GitHub, please follow these steps to get it:
    - **Name**：Any (e.g.`CollabMate`)
    - **Redirect URI**：Keep it exactly consistent with `GITLAB_REDIRECT_URI` in `backend/.env` (e.g. `http://localhost:5000/gitlab/callback`)
    - **check**
-  
+
      ```text
      read_user
      read_api
@@ -99,6 +99,7 @@ If you are pulling code from GitHub, please follow these steps to get it:
 
    - **Confidential**：Yes
    - Click **Save application**
+
 5. Generation parameters:
 
    - **Application ID** → fill in `GITLAB_CLIENT_ID`
